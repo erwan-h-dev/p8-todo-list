@@ -57,7 +57,7 @@ class TaskController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
+            $this->em->flush();
 
             $this->addFlash('success', 'La tâche a bien été modifiée.');
 
@@ -76,7 +76,7 @@ class TaskController extends AbstractController
     public function toggleTaskAction(Task $task)
     {
         $task->toggle(!$task->isDone());
-        $this->getDoctrine()->getManager()->flush();
+        $this->em->flush();
 
         $this->addFlash('success', sprintf('La tâche %s a bien été marquée comme faite.', $task->getTitle()));
 
@@ -88,7 +88,7 @@ class TaskController extends AbstractController
      */
     public function deleteTaskAction(Task $task)
     {
-        $this->em = $this->getDoctrine()->getManager();
+
         $this->em->remove($task);
         $this->em->flush();
 
