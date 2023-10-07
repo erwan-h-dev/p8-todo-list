@@ -44,7 +44,9 @@ class TaskController extends AbstractController
             return $this->redirectToRoute('task_list');
         }
 
-        return $this->render('task/create.html.twig', ['form' => $form->createView()]);
+        return $this->render('task/create.html.twig', [
+            'form' => $form->createView()
+        ]);
     }
 
     /**
@@ -56,7 +58,7 @@ class TaskController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
             $this->addFlash('success', 'La tâche a bien été modifiée.');
@@ -88,7 +90,6 @@ class TaskController extends AbstractController
      */
     public function deleteTaskAction(Task $task)
     {
-
         $this->em->remove($task);
         $this->em->flush();
 
