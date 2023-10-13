@@ -1,0 +1,43 @@
+ <nav class="navbar navbar-expand-lg fixed-top navbar-light" style="background-color: #e3f2fd;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ path('homepage') }}">
+            To Do List app
+            <img src="{{ asset('img/Logo_OpenClassrooms.png') }}" alt="OpenClassrooms" />
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar">
+            {% if app.user %}
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% set current_route  = app.request.attributes.get('_route') %}
+                <li class="nav-item">
+                    <a class="nav-link  {% if current_route == 'homepage' %}active{% endif %}" aria-current="page" href="{{ path('homepage') }}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link  {% if current_route == 'task_create' %}active{% endif %}" href="{{ path('task_create') }}">Créer une nouvelle tâche</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link  {% if current_route == 'task_list' %}active{% endif %}" href="{{ path('task_list') }}">Consulter la liste des tâches à faire</a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+        <ul class="navbar-nav">
+            {% if app.user and is_granted('ROLE_ADMIN') %}
+                <li class="nav-item">
+                    <a class="nav-link  {% if current_route == 'user_list' %}active{% endif %}" href="{{ path('user_list') }}">Liste des utilisateurs</a>
+                </li>
+            {% endif %}
+            {% if app.user %}
+                <li class="nav-item">
+                    <a href="{{ path('logout') }}" class="btn btn-outline-danger me-2" >Se déconnecter</a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a href="{{ path('login') }}" class="btn btn-outline-primary me-2" >Se connecter</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
