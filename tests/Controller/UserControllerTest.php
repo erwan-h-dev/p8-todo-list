@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserControllerTest extends WebTestCase
 {
@@ -17,35 +18,51 @@ class UserControllerTest extends WebTestCase
     private UserRepository|null $userRepository = null;
     private User|null $user = null;
     private $urlGenerator = null;
+    private UserPasswordHasherInterface|null $passwordHasher = null;
     
     public function setUp(): void
     {
         $this->client = static::createClient();
         $this->urlGenerator = $this->client->getContainer()->get('router.default');
         $this->em = $this->client->getContainer()->get('doctrine.orm.entity_manager');
+        $this->passwordHasher = $this->client->getContainer()->get('security.password_hasher');
     }
 
     public function login(): void
     {
-        // $this->userRepository = $this->client->getContainer()->get('doctrine.orm.entity_manager')->getRepository(User::class);
-        // $this->user = $this->userRepository->findOneByEmail('test@test.fr');
-        // $this->client->loginUser($this->user);
+        $userRepository = $this->em->getRepository(User::class);
+        $this->user = $userRepository->findOneByEmail('user@mail.fr');
+        $this->client->loginUser($this->user);
     }
 
     private function makeUser(string $methodName): User
     {
         $user = new User();
-        $user->setUsername('Test title : ' . $methodName);
+        $user->setUsername('testUsername');
+
         $user->setEmail('test.'.$methodName.'@test.fr');
-        $password = $this->get('security.password_encoder')->encodePassword(
+
+        $hashedPassword = $this->passwordHasher->hashPassword(
             $user,
-            $user->getPassword()
+            "password"
         );
 
-        $user->setPassword($password);
+        $user->setPassword($hashedPassword);
+
         $this->em->persist($user);
 
+        $this->em->flush();
+
         return $user;
+    }
+
+    private function removeUser(string $email): void
+    {
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+
+        $this->em->remove($user);
+        
+        $this->em->flush();
     }
 
     public function testListAction(): void
@@ -65,8 +82,10 @@ class UserControllerTest extends WebTestCase
         );
     }
 
-    public function testCreateAction()
+    public function testCreateUser()
     {
+        $this->login();
+
         $crawler = $this->client->request(
             Request::METHOD_GET, 
             $this->urlGenerator->generate('user_create')
@@ -77,31 +96,42 @@ class UserControllerTest extends WebTestCase
             $this->client->getResponse()->getStatusCode()
         );
 
+        
         $form = $crawler->selectButton('Ajouter')->form([
-            'user[username]' =>         'test username',
-            'user[password][first]' =>  'test password',
-            'user[password][second]' => 'test username',
-            'user[email]' =>            'test@mail.com'
+            'user[username]' =>         'testuser',
+            'user[password][first]' =>  'password',
+            'user[password][second]' => 'password',
+            'user[email]' =>            'testuser@mail.com'
         ]);
 
         $this->client->submit($form);
-        
+
         $this->assertEquals(
             Response::HTTP_FOUND,
             $this->client->getResponse()->getStatusCode()
         );
 
         $crawler = $this->client->followRedirect();
-        
+
+        // make assert on flash message
+
         $this->assertSelectorTextContains(
             'div.alert-success',
             "Superbe ! L'utilisateur a bien été ajouté."
         );
+
+        $this->removeUser('testuser@mail.com');
     }
 
     public function testEditAction()
     {
-        $user = $this->makeUser('testEditAction');
+        $this->login();
+
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => ('user@test.fr')]);
+        
+        $user->setUsername('username');
+
+        $this->em->flush();
 
         $crawler = $this->client->request(
             Request::METHOD_GET,
@@ -115,11 +145,11 @@ class UserControllerTest extends WebTestCase
             $this->client->getResponse()->getStatusCode()
         );
 
-        $form = $crawler->selectButton('Ajouter')->form([
-            'user[username]' =>         'test edit username',
-            'user[password][first]' =>  'test edit password',
-            'user[password][second]' => 'test edit username',
-            'user[email]' =>            'test@mail.com'
+        $form = $crawler->selectButton('Modifier')->form([
+            'user[username]' =>         'edit_username',
+            'user[password][first]' =>  'password',
+            'user[password][second]' => 'password',
+            'user[email]' =>            'user@test.fr'
         ]);
 
         $this->client->submit($form);
@@ -133,7 +163,7 @@ class UserControllerTest extends WebTestCase
 
         $this->assertSelectorTextContains(
             'div.alert-success',
-            "Superbe ! L'utilisateur a bien été ajouté."
+            "Superbe ! L'utilisateur a bien été modifié"
         );
     }
 }

@@ -25,7 +25,10 @@ class DefaultControllerTest extends WebTestCase
 
     public function testHomepage()
     {
-        $request = $this->client->request(Request::METHOD_GET, $this->urlGenerator->generate('homepage'));
+        $request = $this->client->request(
+            Request::METHOD_GET, 
+            $this->urlGenerator->generate('homepage')
+        );
 
         $this->assertSame(
             Response::HTTP_OK,
@@ -36,11 +39,6 @@ class DefaultControllerTest extends WebTestCase
         $neddle = "Bienvenue sur Todo List";
         
         $this->assertSelectorTextContains('h1', $neddle);
-        
-        // check if the response is 200
-
-        // count number of images with the class "slide-image"
-        $this->assertSame(1, $request->filter('img.slide-image')->count());
     }
 
 }

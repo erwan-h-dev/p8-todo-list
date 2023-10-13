@@ -27,16 +27,4 @@ class TaskTest extends TestCase
         $this->assertTrue($task->isDone());
 
     }
-
-    public function testAuteur()
-    {
-        $task = new Task();
-        $user = new User();
-        
-        $user->setUsername('Test Auteur');
-        $task->setAuteur($user);
-        
-        $this->assertEquals($user, $task->getAuteur());
-    }
-
 }

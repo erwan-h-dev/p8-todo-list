@@ -3,8 +3,6 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Task;
-use App\Entity\User;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,27 +13,14 @@ class TaskControllerTest extends WebTestCase
 {
     private KernelBrowser|null $client = null;
     private EntityManagerInterface|null $em = null;
-    private UserRepository|null $userRepository = null;
-    private User|null $user = null;
-    private Task|null $task = null;
+    // private UserRepository|null $userRepository = null;
     private $urlGenerator = null;
-    
+
     public function setUp(): void
     {
         $this->client = static::createClient();
         $this->urlGenerator = $this->client->getContainer()->get('router.default');
         $this->em = $this->client->getContainer()->get('doctrine.orm.entity_manager');
-    }
-
-    public function tearDown(): void
-    {
-        $tasks = $this->em->getRepository(Task::class)->findAll();
-
-        foreach ($tasks as $task) {
-            $this->em->remove($task);
-        }
-
-        $this->em->flush();
     }
 
     public function login(): void
@@ -58,13 +43,13 @@ class TaskControllerTest extends WebTestCase
         return $task;
     }
 
-    public function testTasksList()
+    public function testTasksList(): void
     {
         $crawler = $this->client->request(
-            Request::METHOD_GET, 
+            Request::METHOD_GET,
             $this->urlGenerator->generate('task_list')
         );
-        
+
         $this->assertSame(
             Response::HTTP_OK,
             $this->client->getResponse()->getStatusCode()
@@ -77,19 +62,22 @@ class TaskControllerTest extends WebTestCase
         );
     }
 
-    public function testCreateAction()
+    public function testCreateAction(): void
     {
-        $crawler = $this->client->request(Request::METHOD_GET, $this->urlGenerator->generate('task_create'));
+        $crawler = $this->client->request(
+            Request::METHOD_GET, 
+            $this->urlGenerator->generate('task_create')
+        );
 
         $form = $crawler->selectButton('Ajouter')->form([
             'task[title]' => 'Test title : testCreateAction',
             'task[content]' => 'Test content : testCreateAction'
         ]);
-
+        
         $this->client->submit($form);
 
         $this->assertEquals(
-            Response::HTTP_FOUND, 
+            Response::HTTP_FOUND,
             $this->client->getResponse()->getStatusCode()
         );
 
@@ -101,12 +89,12 @@ class TaskControllerTest extends WebTestCase
         );
     }
 
-    public function testEditAction()
+    public function testEditAction(): void
     {
         $task = $this->makeTask('testEditAction');
 
         $crawler = $this->client->request(
-            Request::METHOD_GET, 
+            Request::METHOD_GET,
             $this->urlGenerator->generate('task_edit', [
                 'id' => $task->getId()
             ])
@@ -120,7 +108,7 @@ class TaskControllerTest extends WebTestCase
         $this->client->submit($form);
 
         $this->assertEquals(
-            Response::HTTP_FOUND, 
+            Response::HTTP_FOUND,
             $this->client->getResponse()->getStatusCode()
         );
 
@@ -130,22 +118,29 @@ class TaskControllerTest extends WebTestCase
             'div.alert-success',
             'Superbe ! La tâche a bien été modifiée.'
         );
+
+        $task = $this->em->getRepository(Task::class)->find($task->getId());
+        // check if the task title is same of "Test title : testEditAction modifié"
+        $this->assertSame(
+            'Test title : testEditAction modifié',
+            $task->getTitle()
+        );
     }
 
-    public function testToggleTaskAction()
+    public function testToggleTaskAction(): void
     {
 
         $task = $this->makeTask('testToggleTaskAction');
-       
+
         $crawler = $this->client->request(
-            Request::METHOD_GET, 
+            Request::METHOD_GET,
             $this->urlGenerator->generate('task_toggle', [
                 'id' => $task->getId()
             ])
         );
 
         $this->assertEquals(
-            Response::HTTP_FOUND, 
+            Response::HTTP_FOUND,
             $this->client->getResponse()->getStatusCode()
         );
 
@@ -159,7 +154,7 @@ class TaskControllerTest extends WebTestCase
         );
     }
 
-    public function testDeleteTaskAction()
+    public function testDeleteTaskAction(): void
     {
         $task = $this->makeTask('testDeleteTaskAction');
 
@@ -171,7 +166,7 @@ class TaskControllerTest extends WebTestCase
         );
 
         $this->assertEquals(
-            Response::HTTP_FOUND, 
+            Response::HTTP_FOUND,
             $this->client->getResponse()->getStatusCode()
         );
 

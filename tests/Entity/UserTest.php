@@ -22,10 +22,12 @@ class UserTest extends TestCase
         $this->assertEquals('test@example.com', $user->getEmail());
         $this->assertEquals('testpassword', $user->getPassword());
 
-        $this->assertEquals(['ROLE_USER'], $user->getRoles());
+        $this->assertEquals([ 0 => 'ROLE_USER'], $user->getRoles());
+       
+        $user->setRoles(['ROLE_ADMIN']);
 
-        $this->assertEquals('testuser', $user->getUserIdentifier());
+        $this->assertEquals(['ROLE_ADMIN', 'ROLE_USER'], $user->getRoles());
+
+        $this->assertEquals('test@example.com', $user->getUserIdentifier());
     }
-
-    
 }
