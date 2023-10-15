@@ -2,67 +2,66 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-/**
- * @ORM\Table("user")
- * @ORM\Entity
- * @UniqueEntity("email")
- */
+#[UniqueEntity("email")]
+#[ORM\Entity(repositoryClass: TrickRepository::class)]
+#[ORM\Table("user")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=25, unique=true)
-     * @Assert\NotBlank(message="Vous devez saisir un nom d'utilisateur.")
-     */
-    private $username;
+    #[ORM\Column(length: 25, unique: true)]
+    #[Assert\NotBlank(message: "Vous devez saisir un nom d'utilisateur.")]
+    private ?string $username = null;
 
-    /**
-     * @ORM\Column(type="string", length=64)
-     */
-    private $password;
 
-    /**
-     * @ORM\Column(type="string", length=60, unique=true)
-     * @Assert\NotBlank(message="Vous devez saisir une adresse email.")
-     * @Assert\Email(message="Le format de l'adresse n'est pas correcte.")
-     */
-    private $email;
+    #[ORM\Column(length: 64)]
+    private ?string $password = null;
 
-    /**
-     * @ORM\Column(type="json")
-     */
-    private $roles = [];
+    #[ORM\Column(unique: true)]
+    #[Assert\NotBlank(message: "Vous devez saisir une adresse email.")]
+    #[Assert\Email(message: "Le format de l'adresse n'est pas correcte.")]
+    private ?string $email = null;
 
-    public function getId()
+    #[ORM\Column(type: "json")]
+    private array $roles = [];
+
+    #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Task::class)]
+    private Collection $tasks;
+
+    public function __construct()
+    {
+        $this->tasks = new ArrayCollection();
+    }
+
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getUsername()
+    public function getUsername(): string
     {
         return $this->username;
     }
 
-    public function setUsername($username)
+    public function setUsername($username): self
     {
         $this->username = $username;
+
+        return $this;
     }
 
     /**
-     * The public representation of the user (e.g. a username, an email address, etc.)
-     *
      * @see UserInterface
      */
     public function getUserIdentifier(): string
@@ -104,20 +103,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getEmail()
+    public function getEmail(): string
     {
         return $this->email;
     }
 
-    public function setEmail($email)
+    public function setEmail($email): self
     {
         $this->email = $email;
+
+        return $this;
     }
 
     /**
-     * Returning a salt is only needed if you are not using a modern
-     * hashing algorithm (e.g. bcrypt or sodium) in your security.yaml.
-     *
      * @see UserInterface
      */
     public function getSalt(): ?string
@@ -132,5 +130,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, Task>
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function addTask(Task $task): static
+    {
+        if (!$this->tasks->contains($task)) {
+            $this->tasks->add($task);
+            $task->setAuteur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTask(Task $task): static
+    {
+        if ($this->tasks->removeElement($task)) {
+            // set the owning side to null (unless already changed)
+            if ($task->getAuteur() === $this) {
+                $task->setAuteur(null);
+            }
+        }
+
+        return $this;
     }
 }
