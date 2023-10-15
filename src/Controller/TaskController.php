@@ -8,8 +8,11 @@ use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+#[Route('/tasks')]
+#[IsGranted('ROLE_USER')]
 class TaskController extends AbstractController
 {
 
@@ -17,17 +20,18 @@ class TaskController extends AbstractController
         private EntityManagerInterface $em,
         private TaskRepository $taskRepository
     ){ }
-    /**
-     * @Route("/tasks", name="task_list")
-     */
+    
+    #[Route('/', name: 'task_list')]
     public function listAction()
     {
-        return $this->render('task/list.html.twig', ['tasks' => $this->taskRepository->findAll()]);
+        $tasks = $this->taskRepository->findAll();
+
+        return $this->render('task/list.html.twig', [
+            'tasks' => $tasks
+        ]);
     }
 
-    /**
-     * @Route("/tasks/create", name="task_create")
-     */
+    #[Route('/create', name: 'task_create')]
     public function createAction(Request $request)
     {
         $task = new Task();
@@ -49,9 +53,8 @@ class TaskController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/tasks/{id}/edit", name="task_edit")
-     */
+    #[Route('/{id}/edit', name: 'task_edit')]
+    #[IsGranted('EDIT', subject: 'task')]
     public function editAction(Task $task, Request $request)
     {
         $form = $this->createForm(TaskType::class, $task);
@@ -72,9 +75,8 @@ class TaskController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/tasks/{id}/toggle", name="task_toggle")
-     */
+    #[Route('/{id}/toggle', name: 'task_toggle')]
+    #[IsGranted('EDIT', subject: 'task')]
     public function toggleTaskAction(Task $task)
     {
         $task->toggle(!$task->isDone());
@@ -85,9 +87,8 @@ class TaskController extends AbstractController
         return $this->redirectToRoute('task_list');
     }
 
-    /**
-     * @Route("/tasks/{id}/delete", name="task_delete")
-     */
+    #[Route('/{id}/delete', name: 'task_delete')]
+    #[IsGranted('DELETE', subject: 'task')]
     public function deleteTaskAction(Task $task)
     {
         $this->em->remove($task);
