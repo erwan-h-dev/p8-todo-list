@@ -10,16 +10,19 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class TaskVoter extends Voter
 {
-    public const EDIT = 'POST_EDIT';
-    public const DELETE = 'POST_DELETE';
-    public const VIEW = 'POST_VIEW';
+    public const VIEW = 'VIEW';
+    public const EDIT = 'EDIT';
+    public const DELETE = 'DELETE';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
         // replace with your own logic
         // https://symfony.com/doc/current/security/voters.html
-        return in_array($attribute, [self::EDIT, self::VIEW, self::DELETE])
-            && $subject instanceof Task;
+        return in_array($attribute, [
+            self::EDIT, 
+            self::VIEW, 
+            self::DELETE
+        ]) && $subject instanceof Task;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool

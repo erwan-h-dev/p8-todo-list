@@ -13,4 +13,18 @@ class TaskRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Task::class);
     }
+
+    public function findAllQuery($user = null): Query
+    {
+        $qb = $this->createQueryBuilder('t');
+
+        if(!is_null($user)){
+            $qb->where('t.auteur = :user')
+                ->setParameter('user', $user);
+        }
+
+        $qb->orderBy('t.createdAt', 'DESC');
+
+        return $qb->getQuery();
+    }
 }

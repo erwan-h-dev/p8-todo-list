@@ -6,6 +6,8 @@ use App\Entity\Task;
 use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
+use \Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -22,19 +24,28 @@ class TaskController extends AbstractController
     ){ }
     
     #[Route('/', name: 'task_list')]
-    public function listAction()
+    public function listTask(PaginatorInterface $paginator, Request $request): Response
     {
-        $tasks = $this->taskRepository->findAll();
+        $tasksQuery = $this->taskRepository->findAllQuery($this->getUser());
+
+        $pagination = $paginator->paginate(
+            $tasksQuery,
+            $request->query->get('page', 1),
+            9
+        ); 
 
         return $this->render('task/list.html.twig', [
-            'tasks' => $tasks
+            'title' => 'Liste des tâches',
+            'totalTasks' => $this->taskRepository->findBy(['auteur' => $this->getUser()]),
+            'pagination' => $pagination
         ]);
     }
 
     #[Route('/create', name: 'task_create')]
-    public function createAction(Request $request)
+    public function createTask(Request $request)
     {
         $task = new Task();
+        $task->setAuteur($this->getUser());
         $form = $this->createForm(TaskType::class, $task);
 
         $form->handleRequest($request);
@@ -48,14 +59,15 @@ class TaskController extends AbstractController
             return $this->redirectToRoute('task_list');
         }
 
-        return $this->render('task/create.html.twig', [
+        return $this->render('task/form.html.twig', [
+            'title' => 'Créer une tâche',
             'form' => $form->createView()
         ]);
     }
 
     #[Route('/{id}/edit', name: 'task_edit')]
     #[IsGranted('EDIT', subject: 'task')]
-    public function editAction(Task $task, Request $request)
+    public function editTask(Task $task, Request $request)
     {
         $form = $this->createForm(TaskType::class, $task);
 
@@ -69,15 +81,15 @@ class TaskController extends AbstractController
             return $this->redirectToRoute('task_list');
         }
 
-        return $this->render('task/edit.html.twig', [
-            'form' => $form->createView(),
-            'task' => $task,
+        return $this->render('task/form.html.twig', [
+            'title' => 'Modifier une tâche',
+            'form' => $form->createView()
         ]);
     }
 
     #[Route('/{id}/toggle', name: 'task_toggle')]
     #[IsGranted('EDIT', subject: 'task')]
-    public function toggleTaskAction(Task $task)
+    public function toggleTask(Task $task)
     {
         $task->toggle(!$task->isDone());
         $this->em->flush();
@@ -89,7 +101,7 @@ class TaskController extends AbstractController
 
     #[Route('/{id}/delete', name: 'task_delete')]
     #[IsGranted('DELETE', subject: 'task')]
-    public function deleteTaskAction(Task $task)
+    public function deleteTask(Task $task)
     {
         $this->em->remove($task);
         $this->em->flush();

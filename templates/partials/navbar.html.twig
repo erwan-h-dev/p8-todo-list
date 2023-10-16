@@ -15,9 +15,6 @@
                     <a class="nav-link  {% if current_route == 'homepage' %}active{% endif %}" aria-current="page" href="{{ path('homepage') }}">Accueil</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  {% if current_route == 'task_create' %}active{% endif %}" href="{{ path('task_create') }}">Créer une nouvelle tâche</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link  {% if current_route == 'task_list' %}active{% endif %}" href="{{ path('task_list') }}">Consulter la liste des tâches à faire</a>
                 </li>
             </ul>
@@ -26,6 +23,9 @@
         <ul class="navbar-nav">
             {% if app.user and is_granted('ROLE_ADMIN') %}
                 <li class="nav-item">
+                    <a class="nav-link  {% if current_route == 'admin_tasks_list' %}active{% endif %}" href="{{ path('admin_tasks_list') }}">Consulter la liste de toutes les tâches</a>
+                </li>
+                <li class="nav-item mr-3">
                     <a class="nav-link  {% if current_route == 'user_list' %}active{% endif %}" href="{{ path('user_list') }}">Liste des utilisateurs</a>
                 </li>
             {% endif %}
