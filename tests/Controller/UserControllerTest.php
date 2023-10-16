@@ -15,7 +15,6 @@ class UserControllerTest extends WebTestCase
 {
     private KernelBrowser|null $client = null;
     private EntityManagerInterface|null $em = null;
-    private UserRepository|null $userRepository = null;
     private User|null $user = null;
     private $urlGenerator = null;
     private UserPasswordHasherInterface|null $passwordHasher = null;
@@ -28,47 +27,36 @@ class UserControllerTest extends WebTestCase
         $this->passwordHasher = $this->client->getContainer()->get('security.password_hasher');
     }
 
-    public function login(): void
+    public function login(string $username): void
     {
         $userRepository = $this->em->getRepository(User::class);
-        $this->user = $userRepository->findOneByEmail('user@mail.fr');
+        $this->user = $userRepository->findOneBy(['username' => $username]);
         $this->client->loginUser($this->user);
     }
 
-    private function makeUser(string $methodName): User
+    public function testUserListUser(): void
     {
-        $user = new User();
-        $user->setUsername('testUsername');
+        $this->login('user');
 
-        $user->setEmail('test.'.$methodName.'@test.fr');
-
-        $hashedPassword = $this->passwordHasher->hashPassword(
-            $user,
-            "password"
+        $crawler = $this->client->request(
+            Request::METHOD_GET, 
+            $this->urlGenerator->generate('user_list')
         );
 
-        $user->setPassword($hashedPassword);
-
-        $this->em->persist($user);
-
-        $this->em->flush();
-
-        return $user;
+        $this->assertSame(
+            Response::HTTP_FORBIDDEN,
+            $this->client->getResponse()->getStatusCode()
+        );
     }
 
-    private function removeUser(string $email): void
+    public function testAdminListUser(): void
     {
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $this->login('admin');
 
-        $this->em->remove($user);
-        
-        $this->em->flush();
-    }
-
-    public function testListAction(): void
-    {
-
-        $crawler = $this->client->request(Request::METHOD_GET, $this->urlGenerator->generate('user_list'));
+        $crawler = $this->client->request(
+            Request::METHOD_GET, 
+            $this->urlGenerator->generate('user_list')
+        );
 
         $this->assertSame(
             Response::HTTP_OK,
@@ -84,7 +72,7 @@ class UserControllerTest extends WebTestCase
 
     public function testCreateUser()
     {
-        $this->login();
+        $this->login('admin');
 
         $crawler = $this->client->request(
             Request::METHOD_GET, 
@@ -96,12 +84,12 @@ class UserControllerTest extends WebTestCase
             $this->client->getResponse()->getStatusCode()
         );
 
-        
         $form = $crawler->selectButton('Ajouter')->form([
             'user[username]' =>         'testuser',
             'user[password][first]' =>  'password',
             'user[password][second]' => 'password',
-            'user[email]' =>            'testuser@mail.com'
+            'user[email]' =>            'testuser@mail.com',
+            'user[roles]' =>            false
         ]);
 
         $this->client->submit($form);
@@ -119,18 +107,14 @@ class UserControllerTest extends WebTestCase
             'div.alert-success',
             "Superbe ! L'utilisateur a bien été ajouté."
         );
-
-        $this->removeUser('testuser@mail.com');
     }
 
-    public function testEditAction()
+    public function testEditUser()
     {
-        $this->login();
+        $this->login('admin');
 
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => ('user@test.fr')]);
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'user']);
         
-        $user->setUsername('username');
-
         $this->em->flush();
 
         $crawler = $this->client->request(
@@ -146,10 +130,11 @@ class UserControllerTest extends WebTestCase
         );
 
         $form = $crawler->selectButton('Modifier')->form([
-            'user[username]' =>         'edit_username',
+            'user[username]' =>         'user',
             'user[password][first]' =>  'password',
             'user[password][second]' => 'password',
-            'user[email]' =>            'user@test.fr'
+            'user[email]' =>            'user@test.fr',
+            'user[roles]' =>            true
         ]);
 
         $this->client->submit($form);
@@ -160,6 +145,13 @@ class UserControllerTest extends WebTestCase
         );
 
         $crawler = $this->client->followRedirect();
+
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'user']);
+
+        $this->assertSame(
+            true,
+            $user->isAdmin()
+        );
 
         $this->assertSelectorTextContains(
             'div.alert-success',

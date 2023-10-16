@@ -26,10 +26,10 @@ class SecurityControllerTest extends WebTestCase
         $this->passwordHasher = $this->client->getContainer()->get('security.password_hasher');
 
     }
-    public function login(): void
+    public function login(string $username): void
     {
         $userRepository = $this->em->getRepository(User::class);
-        $this->user = $userRepository->findOneByEmail('user@mail.fr');
+        $this->user = $userRepository->findOneBy(['username' => $username]);
         $this->client->loginUser($this->user);
     }
 
@@ -54,7 +54,10 @@ class SecurityControllerTest extends WebTestCase
 
         $crawler = $this->client->followRedirect();
 
-        $this->assertSelectorExists('a.btn-danger');
+        $this->assertSelectorExists(
+            'h1',
+            'Bienvenue sur Todo List'
+        );
     }
     public function testLoginFail(): void
     {
@@ -86,7 +89,7 @@ class SecurityControllerTest extends WebTestCase
 
     public function testLogout(): void
     {
-        $this->login();
+        $this->login('admin');
 
         $this->client->request(
             Request::METHOD_GET,
@@ -104,7 +107,7 @@ class SecurityControllerTest extends WebTestCase
             Response::HTTP_OK,
             $this->client->getResponse()->getStatusCode()
         );
-
-        $this->assertSelectorNotExists('a.btn-danger');
+        
+        $this->assertSelectorExists('a.btn-outline-primary');
     }
 }

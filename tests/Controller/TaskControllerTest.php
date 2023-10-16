@@ -3,7 +3,9 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Task;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -13,7 +15,8 @@ class TaskControllerTest extends WebTestCase
 {
     private KernelBrowser|null $client = null;
     private EntityManagerInterface|null $em = null;
-    // private UserRepository|null $userRepository = null;
+    private User|null $user = null;
+    private EntityRepository $taskRepository;
     private $urlGenerator = null;
 
     public function setUp(): void
@@ -21,30 +24,20 @@ class TaskControllerTest extends WebTestCase
         $this->client = static::createClient();
         $this->urlGenerator = $this->client->getContainer()->get('router.default');
         $this->em = $this->client->getContainer()->get('doctrine.orm.entity_manager');
+        $this->taskRepository = $this->em->getRepository(Task::class);
     }
 
-    public function login(): void
+    public function login(string $username): void
     {
-        // $this->userRepository = $this->client->getContainer()->get('doctrine.orm.entity_manager')->getRepository(User::class);
-        // $this->user = $this->userRepository->findOneByEmail('test@test.fr');
-        // $this->client->loginUser($this->user);
-    }
-
-    public function makeTask(string $methodName): Task
-    {
-        $task = new Task();
-        $task->setTitle('Test title : ' . $methodName);
-        $task->setContent('Test content : ' . $methodName);
-        $task->setCreatedAt(new \DateTime());
-
-        $this->em->persist($task);
-        $this->em->flush();
-
-        return $task;
+        $userRepository = $this->em->getRepository(User::class);
+        $this->user = $userRepository->findOneBy(['username' => $username]);
+        $this->client->loginUser($this->user);
     }
 
     public function testTasksList(): void
     {
+        $this->login('user');
+
         $crawler = $this->client->request(
             Request::METHOD_GET,
             $this->urlGenerator->generate('task_list')
@@ -54,24 +47,59 @@ class TaskControllerTest extends WebTestCase
             Response::HTTP_OK,
             $this->client->getResponse()->getStatusCode()
         );
-        
+
+        $totalTask = count($this->em->getRepository(Task::class)->findBy(['auteur' => $this->user]));
+
+        if ($totalTask > 9) {
+            $totalTask = 9;
+        }
+
         $this->assertSame(
-            count($this->em->getRepository(Task::class)->findAll()),
+            $totalTask,
             // get the elements with the class thumbnail
-            $crawler->filter('div.thumbnail')->count()
+            $crawler->filter('div.rounded-3')->count()
         );
     }
 
-    public function testCreateAction(): void
+    public function testTasksListAdmin(): void
     {
+        $this->login('admin');
+
+        $crawler = $this->client->request(
+            Request::METHOD_GET,
+            $this->urlGenerator->generate('admin_tasks_list')
+        );
+
+        $this->assertSame(
+            Response::HTTP_OK,
+            $this->client->getResponse()->getStatusCode()
+        );
+
+        $totalTask = count($this->em->getRepository(Task::class)->findAll());
+
+        if ($totalTask > 9) {
+            $totalTask = 9;
+        }
+
+        $this->assertSame(
+            $totalTask,
+            // get the elements with the class thumbnail
+            $crawler->filter('div.rounded-3')->count()
+        );
+    }
+
+    public function testCreateTask(): void
+    {
+        $this->login('user');
+
         $crawler = $this->client->request(
             Request::METHOD_GET, 
             $this->urlGenerator->generate('task_create')
         );
 
         $form = $crawler->selectButton('Ajouter')->form([
-            'task[title]' => 'Test title : testCreateAction',
-            'task[content]' => 'Test content : testCreateAction'
+            'task[title]' => 'Test title : testCreateTask',
+            'task[content]' => 'Test content : testCreateTask'
         ]);
         
         $this->client->submit($form);
@@ -89,10 +117,11 @@ class TaskControllerTest extends WebTestCase
         );
     }
 
-    public function testEditAction(): void
+    public function testEditTask(): void
     {
-        $task = $this->makeTask('testEditAction');
-
+        $this->login('user');
+        
+        $task = $this->taskRepository->findOneBy(['auteur' => $this->user]);
         $crawler = $this->client->request(
             Request::METHOD_GET,
             $this->urlGenerator->generate('task_edit', [
@@ -101,8 +130,8 @@ class TaskControllerTest extends WebTestCase
         );
 
         $form = $crawler->selectButton('Modifier')->form([
-            'task[title]' => 'Test title : testEditAction modifié',
-            'task[content]' => 'Test content : testEditAction modifié'
+            'task[title]' => 'Test title : testEditTask modifié',
+            'task[content]' => 'Test content : testEditTask modifié'
         ]);
 
         $this->client->submit($form);
@@ -119,18 +148,20 @@ class TaskControllerTest extends WebTestCase
             'Superbe ! La tâche a bien été modifiée.'
         );
 
-        $task = $this->em->getRepository(Task::class)->find($task->getId());
-        // check if the task title is same of "Test title : testEditAction modifié"
+        $task = $this->taskRepository->find($task->getId());
+
+        // check if the task title is same of "Test title : testEditTask modifié"
         $this->assertSame(
-            'Test title : testEditAction modifié',
+            'Test title : testEditTask modifié',
             $task->getTitle()
         );
     }
 
-    public function testToggleTaskAction(): void
+    public function testToggleTask(): void
     {
+        $this->login('user');
 
-        $task = $this->makeTask('testToggleTaskAction');
+        $task = $this->taskRepository->findOneBy(['auteur' => $this->user]);
 
         $crawler = $this->client->request(
             Request::METHOD_GET,
@@ -150,13 +181,15 @@ class TaskControllerTest extends WebTestCase
 
         $this->assertSelectorTextContains(
             'div.alert-success',
-            'Superbe ! La tâche Test title : testToggleTaskAction a bien été marquée comme faite.'
+            'Superbe ! La tâche a bien été marquée comme faite.'
         );
     }
 
-    public function testDeleteTaskAction(): void
+    public function testDeleteTask(): void
     {
-        $task = $this->makeTask('testDeleteTaskAction');
+        $this->login('user');
+
+        $task = $this->taskRepository->findOneBy(['auteur' => $this->user]);
 
         $crawler = $this->client->request(
             Request::METHOD_GET,
