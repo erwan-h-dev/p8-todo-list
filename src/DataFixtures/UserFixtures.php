@@ -2,8 +2,6 @@
 
 namespace App\DataFixtures;
 
-
-
 use App\Entity\User;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -12,10 +10,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture implements OrderedFixtureInterface
 {
-
     public function __construct(
         private UserPasswordHasherInterface $hasher
-    ){ }
+    ) {
+    }
     public function getOrder()
     {
         return 1;

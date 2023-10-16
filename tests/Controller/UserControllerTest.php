@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserControllerTest extends WebTestCase
 {
@@ -17,14 +16,12 @@ class UserControllerTest extends WebTestCase
     private EntityManagerInterface|null $em = null;
     private User|null $user = null;
     private $urlGenerator = null;
-    private UserPasswordHasherInterface|null $passwordHasher = null;
     
     public function setUp(): void
     {
         $this->client = static::createClient();
         $this->urlGenerator = $this->client->getContainer()->get('router.default');
         $this->em = $this->client->getContainer()->get('doctrine.orm.entity_manager');
-        $this->passwordHasher = $this->client->getContainer()->get('security.password_hasher');
     }
 
     public function login(string $username): void

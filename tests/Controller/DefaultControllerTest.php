@@ -12,8 +12,6 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 class DefaultControllerTest extends WebTestCase
 {
     private KernelBrowser|null $client = null;
-    private UserRepository|null $userRepository = null;
-    private User|null $user = null;
     private $urlGenerator = null;
 
 
@@ -25,7 +23,7 @@ class DefaultControllerTest extends WebTestCase
 
     public function testHomepage()
     {
-        $request = $this->client->request(
+        $this->client->request(
             Request::METHOD_GET, 
             $this->urlGenerator->generate('homepage')
         );

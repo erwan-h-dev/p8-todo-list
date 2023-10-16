@@ -19,7 +19,8 @@ class UserController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private UserRepository $userRepository
-    ) { }
+    ) {
+    }
 
     #[Route('/', name: 'user_list')]
     public function listAction()
@@ -43,7 +44,7 @@ class UserController extends AbstractController
             );
 
             // get the value of the checkbox roles in form
-            if($form->get('roles')->getData()){
+            if($form->get('roles')->getData()) {
                 $user->setRoles(['ROLE_ADMIN']);
             }
 
@@ -68,7 +69,7 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
+
             $hashedPassword = $passwordHasher->hashPassword(
                 $user,
                 $user->getPassword()

@@ -14,7 +14,8 @@ class TaskFixtures extends Fixture implements OrderedFixtureInterface
     public function __construct(
         private TaskRepository $taskRepository,
         private UserRepository $userRepository
-    ){ }
+    ) {
+    }
 
     public function getOrder()
     {
@@ -31,7 +32,7 @@ class TaskFixtures extends Fixture implements OrderedFixtureInterface
             $task
                 ->setTitle('Tâche n°' . $i)
                 ->setContent('Contenu de la tâche n°' . $i);
-            
+
             $n = rand(0, 2);
             if ($n != 2) {
                 $task->setAuteur($users[$n]);

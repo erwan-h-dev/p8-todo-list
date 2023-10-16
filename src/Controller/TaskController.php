@@ -7,7 +7,7 @@ use App\Form\TaskType;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
-use \Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -17,12 +17,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[IsGranted('ROLE_USER')]
 class TaskController extends AbstractController
 {
-
     public function __construct(
         private EntityManagerInterface $em,
         private TaskRepository $taskRepository
-    ){ }
-    
+    ) {
+    }
+
     #[Route('/', name: 'task_list')]
     public function listTask(PaginatorInterface $paginator, Request $request): Response
     {
@@ -32,7 +32,7 @@ class TaskController extends AbstractController
             $tasksQuery,
             $request->query->get('page', 1),
             9
-        ); 
+        );
 
         return $this->render('task/list.html.twig', [
             'title' => 'Liste des tâches',

@@ -16,7 +16,8 @@ class AdminController extends AbstractController
 {
     public function __construct(
         private TaskRepository $taskRepository
-    ) { }
+    ) {
+    }
 
     #[Route('/tasks', name: 'admin_tasks_list')]
     public function index(PaginatorInterface $paginator, Request $request): Response

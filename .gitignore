@@ -10,6 +10,11 @@
 /vendor/
 ###< symfony/framework-bundle ###
 
+###> php-cs-fixer ###
+/tools/
+.php-cs-fixer.cache
+###< php-cs-fixer ###
+
 ###> phpunit/phpunit ###
 /phpunit.xml
 .phpunit.result.cache
