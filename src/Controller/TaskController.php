@@ -61,6 +61,7 @@ class TaskController extends AbstractController
 
         return $this->render('task/form.html.twig', [
             'title' => 'Créer une tâche',
+            'button' => 'Ajouter',
             'form' => $form->createView()
         ]);
     }
@@ -83,6 +84,7 @@ class TaskController extends AbstractController
 
         return $this->render('task/form.html.twig', [
             'title' => 'Modifier une tâche',
+            'button' => 'Modifier',
             'form' => $form->createView()
         ]);
     }
@@ -94,7 +96,7 @@ class TaskController extends AbstractController
         $task->toggle(!$task->isDone());
         $this->em->flush();
 
-        $this->addFlash('success', sprintf('La tâche %s a bien été marquée comme faite.', $task->getTitle()));
+        $this->addFlash('success', 'La tâche a bien été marquée comme faite.');
 
         return $this->redirectToRoute('task_list');
     }

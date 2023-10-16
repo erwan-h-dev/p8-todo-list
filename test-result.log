@@ -1,0 +1,10 @@
+PHPUnit 9.6.12 by Sebastian Bergmann and contributors.
+
+Testing 
+................                                                  16 / 16 (100%)
+
+Time: 00:09.184, Memory: 70.50 MB
+
+OK (16 tests, 53 assertions)
+
+Generating code coverage report in HTML format ... done [00:00.196]
