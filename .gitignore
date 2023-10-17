@@ -5,7 +5,7 @@
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
-/public/test-coverage/
+# /public/test-coverage/
 /var/
 /vendor/
 ###< symfony/framework-bundle ###

@@ -18,22 +18,22 @@ Le projet a été développer dans un contexte pédagogique pour OpenClassrooms.
 
 ## INSTALLATION
 
-1. Clone the repository
+1. Clone le repository
 ```bash
 git clone
 ```
 
-2. Install dependencies
+2. Installe les dépendances
 ```bash
 composer install
 ```
 
-4. Create database schema
+4. créer la base de données
 ```bash
 php bin/console doctrine:schema:create
 ```
 
-5. Load fixtures
+5. générer les fixtures
 ```bash
 php bin/console doctrine:fixtures:load
 ```
@@ -41,30 +41,30 @@ php bin/console doctrine:fixtures:load
 ## Connexion :
 
 ```
-- default admin : 
+- admin par défaut : 
     username: admin
     password: password
 ```
 ```
-- default user : 
+- user par défaut : 
     username: user
     password: password
 ```
 
-
 ## TESTS
 
-1. purge test database
+1. purger la base de donnée de test
 ```bash
 php bin/console --env=test doctrine:fixtures:load
 ```
 
-2. run all tests and generate coverage raport [HERE](http://p8-todo-liste.erwan-h.fr:48200/test-coverage/index.html)
+2. executer tous les tests et générer un rapport de couverture dans `public/test-coverage`
+> Le dernier rapport de couverture est disponible [ICI](http://p8-todo-liste.erwan-h.fr:48200/test-coverage/index.html)
 ```bash
 vendor/bin/phpunit --coverage-html public/test-coverage
 ```
 
-3. run a specific test
+3. Executer un test spécifique
 ```bash
 vendor/bin/phpunit --filter=METHODE_NAME or CLASS_NAME
 ```
